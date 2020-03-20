@@ -2,6 +2,8 @@ import numpy as np
 import tensorflow as tf
 
 EPS = 1e-8
+
+@tf.function
 def gaussian_likelihood(x, mu, log_std):
     pre_sum = -0.5 * (((x-mu)/(tf.exp(log_std)+EPS))**2 + 2*log_std + np.log(2*np.pi))
     return tf.reduce_sum(input_tensor=pre_sum, axis=1)
@@ -11,6 +13,7 @@ Policies
 LOG_STD_MAX = 2
 LOG_STD_MIN = -20
 
+@tf.function
 def apply_squashing_func(mu, pi, logp_pi):
     # Adjustment to log prob
     # NOTE: This formula is a little bit magic. To get an understanding of where it
@@ -38,6 +41,7 @@ class Policy(tf.keras.Model):
     self.log_std = tf.keras.Sequential([tf.keras.layers.InputLayer(dtype=tf.float32, input_shape=hidden_sizes[-1]),
         tf.keras.layers.Dense(act_dim, activation=None, name=name+'log_std')])
 
+  @tf.function
   def call(self, input_tensor, training=False):
     h = self.base(input_tensor)
     mu = self.mu(h)
@@ -64,6 +68,7 @@ class Critic(tf.keras.Model):
     self.Q = tf.keras.Sequential([tf.keras.layers.InputLayer(dtype=tf.float32, input_shape=hidden_sizes[-1]),
         tf.keras.layers.Dense(1, activation=None, name=name+'/Q')])
 
+  @tf.function
   def call(self, input_tensor, training=False):
     h = self.base(input_tensor)
     Q = self.Q(h) 

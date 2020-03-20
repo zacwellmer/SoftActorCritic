@@ -148,8 +148,9 @@ class SAC(tf.keras.Model):
         self.value_optimizer = tf.keras.optimizers.Adam(learning_rate = lr)
 
         self.target_init()
-        print([np.array_equal(self.Q1.variables[i].numpy(), self.Q1_targ.variables[i].numpy()) for i in range(len(self.Q1.variables))])
+        #print([np.array_equal(self.Q1.variables[i].numpy(), self.Q1_targ.variables[i].numpy()) for i in range(len(self.Q1.variables))])
 
+    @tf.function
     def compute_loss_q(self, o, a, r, o2, d): 
         o_a = tf.concat([o, a], axis=1)
         q1 = self.Q1(o_a)
@@ -172,6 +173,7 @@ class SAC(tf.keras.Model):
 
         return q_loss, q1_loss, q2_loss, q1, q2
 
+    @tf.function
     def compute_loss_pi(self, o):
         _, pi, logp_pi = self.policy(o)
         o_pi = tf.concat([o, pi], axis=-1)
@@ -182,7 +184,8 @@ class SAC(tf.keras.Model):
         # Entropy-regularized policy loss
         loss_pi = tf.reduce_mean(self.alpha * logp_pi - q_pi)
         return loss_pi, logp_pi
-    
+
+    @tf.function 
     def compute_apply_gradients(self, o, o2, a, r, d):
         main_pi_vars = self.policy.trainable_variables
         main_q_vars = self.Q1.trainable_variables + self.Q2.trainable_variables
@@ -199,6 +202,7 @@ class SAC(tf.keras.Model):
 
         return pi_loss, q1_loss, q2_loss, q1vals, q2vals, logp_pi
 
+    @tf.function
     def update_target(self): 
         # Polyak averaging for target variables
         # (control flow because sess.run otherwise evaluates in nondeterministic order)
@@ -208,6 +212,7 @@ class SAC(tf.keras.Model):
         for v_main, v_targ in zip(self.Q2.variables, self.Q2_targ.variables):
             v_targ.assign(self.polyak*v_targ + (1-self.polyak)*v_main)
 
+    @tf.function 
     def target_init(self):
         # Initializing targets to match main variables
         for v_main, v_targ in zip(self.Q1.variables, self.Q1_targ.variables):
@@ -276,12 +281,10 @@ class SAC(tf.keras.Model):
             if t >= self.update_after and t % self.update_every == 0:
                 for j in range(self.update_every):
                     batch = self.replay_buffer.sample_batch(self.batch_size)
-                    
                     outs = self.compute_apply_gradients(o=batch['obs1'], o2=batch['obs2'], a=batch['acts'], r=batch['rews'], d=batch['done'])
                     self.update_target()
                     self.logger.store(LossPi=outs[0], LossQ1=outs[1], LossQ2=outs[2],
                                  Q1Vals=outs[3], Q2Vals=outs[4], LogPi=outs[5])
-
             # End of epoch wrap-up
             if (t+1) % self.steps_per_epoch == 0:
                 epoch = (t+1) // self.steps_per_epoch
