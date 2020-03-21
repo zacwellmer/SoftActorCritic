@@ -2,9 +2,6 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 
-"""
-Policies
-"""
 LOG_STD_MAX = 2
 LOG_STD_MIN = -20
 
@@ -73,9 +70,6 @@ class Critic(tf.keras.Model):
     Q = self.Q(h) 
     return tf.squeeze(Q, axis=-1)
 
-"""
-Actor-Critics
-"""
 def mlp_actor_critic(obs_dim, act_dim, name, hidden_sizes=(256), activation=tf.nn.relu, output_activation=None, action_space=None):
     policy = Policy(obs_dim, act_dim, name+'/pi', hidden_sizes, activation, output_activation, action_space)
     Q1 = Critic(obs_dim, act_dim, name+'/q1', hidden_sizes, activation)

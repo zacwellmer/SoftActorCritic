@@ -3,7 +3,7 @@ import tensorflow as tf
 import gym
 import time
 import os
-import sac_core as core
+import core
 from utils.logx import EpochLogger
 
 #for gpu in tf.config.experimental.list_physical_devices('GPU'):
@@ -316,9 +316,9 @@ class SAC(tf.keras.Model):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    #parser.add_argument('--env', type=str, default='HalfCheetah-v2')
+    parser.add_argument('--env', type=str, default='Pendulum-v0')
     parser.add_argument('--hid', type=int, default=256)
-    parser.add_argument('--l', type=int, default=1)#2)
+    parser.add_argument('--l', type=int, default=1)
     parser.add_argument('--gamma', type=float, default=0.99)
     parser.add_argument('--seed', '-s', type=int, default=0)
     parser.add_argument('--epochs', type=int, default=50)
@@ -326,11 +326,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     from utils.run_utils import setup_logger_kwargs
     logger_kwargs = setup_logger_kwargs(args.exp_name, args.seed)
-    #magic_sac = SAC(lambda : CarRacingMDNRNN(), actor_critic=core.mlp_actor_critic,
-    #    ac_kwargs=dict(hidden_sizes=[args.hid]*args.l),
-    #    gamma=args.gamma, seed=args.seed, epochs=args.epochs,
-    #    logger_kwargs=logger_kwargs)
-    magic_sac = SAC(lambda : gym.make('Pendulum-v0'), actor_critic=core.mlp_actor_critic,
+
+    magic_sac = SAC(lambda : gym.make(args.env), actor_critic=core.mlp_actor_critic,
         ac_kwargs=dict(hidden_sizes=[args.hid]*args.l),
         gamma=args.gamma, seed=args.seed, epochs=args.epochs,
         logger_kwargs=logger_kwargs)
