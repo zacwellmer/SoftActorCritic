@@ -1,12 +1,7 @@
 import numpy as np
 import tensorflow as tf
+import tensorflow_probability as tfp
 
-EPS = 1e-8
-
-@tf.function
-def gaussian_likelihood(x, mu, log_std):
-    pre_sum = -0.5 * (((x-mu)/(tf.exp(log_std)+EPS))**2 + 2*log_std + np.log(2*np.pi))
-    return tf.reduce_sum(input_tensor=pre_sum, axis=1)
 """
 Policies
 """
@@ -49,8 +44,12 @@ class Policy(tf.keras.Model):
     log_std = tf.clip_by_value(self.log_std(h), LOG_STD_MIN, LOG_STD_MAX)
     std = tf.exp(log_std)
 
-    pi = mu + tf.random.normal(tf.shape(input=mu)) * std
-    logp_pi = gaussian_likelihood(pi, mu, log_std)
+    policy_dist = tfp.distributions.MultivariateNormalDiag(loc=mu, scale_diag=std**2)
+    pi = policy_dist.sample()
+    
+    logp_pi = policy_dist.log_prob(pi)
+    #pi = mu + tf.random.normal(tf.shape(input=mu)) * std
+    #logp_pi = gaussian_likelihood(pi, mu, log_std)
     mu, pi, logp_pi = apply_squashing_func(mu, pi, logp_pi)     
 
     action_scale = self.action_space.high[0]
@@ -72,8 +71,7 @@ class Critic(tf.keras.Model):
   def call(self, input_tensor, training=False):
     h = self.base(input_tensor)
     Q = self.Q(h) 
-    return Q
-
+    return tf.squeeze(Q, axis=-1)
 
 """
 Actor-Critics

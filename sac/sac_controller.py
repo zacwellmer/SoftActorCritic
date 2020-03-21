@@ -183,6 +183,7 @@ class SAC(tf.keras.Model):
 
         # Entropy-regularized policy loss
         loss_pi = tf.reduce_mean(self.alpha * logp_pi - q_pi)
+
         return loss_pi, logp_pi
 
     @tf.function 
