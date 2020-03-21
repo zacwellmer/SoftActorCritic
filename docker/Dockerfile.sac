@@ -1,18 +1,14 @@
 # FROM defines the base image
-FROM tensorflow/tensorflow:devel-py3 
+FROM tensorflow/tensorflow:2.1.0-gpu-py3 
 
 # set the working directory 
-WORKDIR /home/ubuntu/docker_demo
+WORKDIR /home/ubuntu/tf2_sac
 
 # pass the repo file
 COPY . .
 
 RUN apt -y update
-RUN apt install -y git
 RUN apt install -y libopenmpi-dev
-RUN apt install -y xvfb
-RUN apt install -y python-opengl
-RUN apt install -y fontconfig
 RUN apt install -y vim
 
 # install pip packages

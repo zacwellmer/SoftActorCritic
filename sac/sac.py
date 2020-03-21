@@ -6,9 +6,6 @@ import os
 import core
 from utils.logx import EpochLogger
 
-#for gpu in tf.config.experimental.list_physical_devices('GPU'):
-#    tf.config.experimental.set_memory_growth(gpu, True)
-
 class ReplayBuffer:
     """
     A simple FIFO experience replay buffer for SAC agents.
